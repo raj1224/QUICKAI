@@ -1,10 +1,10 @@
 import React from 'react'
 
-function Dashboard() {
+const Dashboard = () => {
   return (
-    <div>
-      <h1>Dashboard Page</h1>
-    </div>
+
+      <h1>Dashboard</h1>
+
   )
 }
 
