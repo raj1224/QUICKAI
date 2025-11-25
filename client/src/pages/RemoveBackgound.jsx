@@ -1,6 +1,7 @@
 import { Eraser, Sparkles } from 'lucide-react';
 import React ,{useState} from 'react'
 
+
 function RemoveBackgound() {
    const [input,setInput]=useState('');
     
