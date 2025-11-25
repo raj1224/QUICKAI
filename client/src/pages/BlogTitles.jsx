@@ -7,8 +7,8 @@ function BlogTitles() {
   const blogCategories=[
       'General','Technology','Health','Travel','Food','Lifestyle','Education','Business',
     ]
-    const [input,setInput]=useState('');
     const [selectedCategory,setSelectedCategory]=useState('General');
+    const [input,setInput]=useState('');
     
     const onSubmitHandler = async (e)=>{
       e.preventDefault();
