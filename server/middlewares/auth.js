@@ -15,7 +15,7 @@ export const auth = async(req ,res ,next) =>{
             });
             req.free_usage = 0;
         }
-        reg.plan= hasPremiumPlan ? 'premium' : 'free';
+        req.plan= hasPremiumPlan ? 'premium' : 'free';
         next();
     } catch (error) {
         res.json(

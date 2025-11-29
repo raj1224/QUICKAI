@@ -1,20 +1,22 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import 'dotenv/config';
 
 import { clerkMiddleware ,requireAuth} from '@clerk/express'
 import userRouter from './routes/userRoutes.js';
 import aiRouter from './routes/aiRoutes.js';
 import connectCloudinary from './configs/cloudinary.js';
-// import { Jobs } from 'openai/resources/fine-tuning/jobs/jobs.mjs';
+
+
 
 const app = express();
+
+
 
 await connectCloudinary();
 
 app.use(cors());
 app.use(express.json());
-
 app.use(clerkMiddleware())
 
 
@@ -22,7 +24,8 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
-app.use(requireAuth());
+app.use(requireAuth()); //routes created after this needs to be login first
+
 app.use('/api/ai', aiRouter)
 app.use('/api/user', userRouter)
 
