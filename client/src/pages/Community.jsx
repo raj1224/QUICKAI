@@ -3,14 +3,49 @@ import { Heart } from 'lucide-react'
 import { useUser } from '@clerk/clerk-react'
 import { dummyPublishedCreationData } from '../assets/assets'
 
+import axios from 'axios';
+import toast from 'react-hot-toast';
+axios.defaults.baseURL=import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+
 
 function Community() {
   const [creations,setCreations]=useState([]);
   const {user}=useUser();
+  const [loading,setLoading]=useState(false);
+  // const [content,setContent]=useState('');
+
+  const {getToken}=useAuth();
 
   const fetchCreations=async()=>{
-    setCreations(dummyPublishedCreationData);
+    // setCreations(dummyPublishedCreationData);
+    try {
+      const {data}=await axios.post('/api/ai/generate-article',{prompt,length:selectedLength.lenght},{
+        headers:{
+          Authorization:`Bearer ${await getToken()}`
+        }
+      })
+    } catch (error) {
+      toast.error(error.message)
+      
+    }
+    setLoading(false)
 
+  }
+
+  const imageLikeToggle=async(id)=>{
+    try {
+       const {data}=await axios.post('/api/ai/toggle-like-creation',{id},{
+        headers:{
+          Authorization:`Bearer ${await getToken()}`
+        }
+      })
+      if(data.success){
+        toast.success(data.message)
+        await fetchCreations()
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
   useEffect(()=>{
@@ -18,7 +53,7 @@ function Community() {
       fetchCreations();
     }
   },[user])
-  return (
+  return !loading ? (
     <div className='flex-1 h-full flex flex-col gap-4 p-6'>
       Creations
       <div className='bg-white h-full w-full rounded-xl overflow-y-scroll'>
@@ -30,7 +65,7 @@ function Community() {
               <p className='text-sm hidden group-hover:block'>{creation.prompt}</p>
               <div className='flex gap-1 items-center'>
                 <p>{creation.likes.length}</p>
-                <Heart className={`min-w-5 h-5 hover:scale-110 cursor-pointer ${creation.likes.includes(user.id)? 'fill-red-500 text-red-600' : 'text-white'}`}/>
+                <Heart onClick={()=>imageLikeToggle(creation.id)} className={`min-w-5 h-5 hover:scale-110 cursor-pointer ${creation.likes.includes(user.id)? 'fill-red-500 text-red-600' : 'text-white'}`}/>
               </div>
             </div>
 
@@ -39,6 +74,11 @@ function Community() {
 
       </div>
       
+    </div>
+  ) : (
+    <div className='flex justify-center items-center h-full'>
+      <span className='w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin '></span>
+
     </div>
   )
 }
