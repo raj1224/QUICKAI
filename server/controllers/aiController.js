@@ -206,7 +206,7 @@ res.json({success: true, content:secure_url});
 export const removeImageObject= async(req ,res)=>{
     try {
         const {userId}= req.auth();
-        const {image}=req.file;
+        const image=req.file;
         const {object}=req.body;
         const plan= req.plan;
 
@@ -251,6 +251,7 @@ export const resumeReview= async(req ,res)=>{
         const {userId}= req.auth();
         const resume= req.file;
         const plan= req.plan;
+
 
         if(plan!=='premium'  ){
             return res.json(
