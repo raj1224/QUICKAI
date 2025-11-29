@@ -1,86 +1,104 @@
-import React, { useState,useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Heart } from 'lucide-react'
-import { useUser } from '@clerk/clerk-react'
-import { dummyPublishedCreationData } from '../assets/assets'
+import { useUser, useAuth } from '@clerk/clerk-react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
-import axios from 'axios';
-import toast from 'react-hot-toast';
-axios.defaults.baseURL=import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
 
 function Community() {
-  const [creations,setCreations]=useState([]);
-  const {user}=useUser();
-  const [loading,setLoading]=useState(false);
-  // const [content,setContent]=useState('');
 
-  const {getToken}=useAuth();
+  const [creations, setCreations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchCreations=async()=>{
-    // setCreations(dummyPublishedCreationData);
+  const { user } = useUser();
+  const { getToken } = useAuth();
+
+  // ⬇ Correct API (replace with your backend fetch route)
+  const fetchCreations = async () => {
     try {
-      const {data}=await axios.post('/api/ai/generate-article',{prompt,length:selectedLength.lenght},{
-        headers:{
-          Authorization:`Bearer ${await getToken()}`
-        }
-      })
-    } catch (error) {
-      toast.error(error.message)
-      
-    }
-    setLoading(false)
+      setLoading(true);
 
+      const { data } = await axios.get("/api/ai/get-community-creations", {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`
+        }
+      });
+
+      if (data.success) setCreations(data.data);
+      else toast.error(data.message);
+
+    } catch (error) {
+      toast.error(error.message);
+    }
+
+    setLoading(false);
   }
 
-  const imageLikeToggle=async(id)=>{
+  // Toggle image like
+  const imageLikeToggle = async (id) => {
     try {
-       const {data}=await axios.post('/api/ai/toggle-like-creation',{id},{
-        headers:{
-          Authorization:`Bearer ${await getToken()}`
-        }
-      })
-      if(data.success){
-        toast.success(data.message)
-        await fetchCreations()
+      const { data } = await axios.post('/api/ai/toggle-like-creation', { id },
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchCreations();  // refresh UI
       }
+
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
     }
   }
 
-  useEffect(()=>{
-    if(user){
-      fetchCreations();
-    }
-  },[user])
+  useEffect(() => {
+    if (user) fetchCreations();
+  }, [user]);
+
   return !loading ? (
-    <div className='flex-1 h-full flex flex-col gap-4 p-6'>
-      Creations
-      <div className='bg-white h-full w-full rounded-xl overflow-y-scroll'>
-        {creations.map((creation, index)=>(
-          <div key={index} className='relative group inline-block pl-3 pt-3 w-full sm:max-w-1/2 lg:max-w-1/3'>
-            <img src={creation.content} className='w-full h-full object-cover rounded-lg' alt="" />
+    <div className="flex-1 h-full flex flex-col gap-4 p-6">
+      
+      <h1 className="text-xl font-semibold">Community Creations</h1>
 
-            <div className='absolute bottom-0 top-0 right-0 left-3 flex gap-2 items-end justify-end group-hover:justify-between p-3 group-hover:bg-gradient-to-b from-transparent to-black/80 text-white rounded-lg'>
-              <p className='text-sm hidden group-hover:block'>{creation.prompt}</p>
-              <div className='flex gap-1 items-center'>
+      <div className="bg-white h-full w-full rounded-xl overflow-y-auto flex flex-wrap gap-4 p-4">
+
+        {creations.length === 0 && (
+          <p className="text-gray-500 w-full text-center mt-10">No posts yet...</p>
+        )}
+
+        {creations.map((creation) => (
+          <div key={creation.id} className="relative group w-full sm:w-[48%] lg:w-[30%]">
+            
+            <img src={creation.content} 
+                 className="rounded-lg w-full h-64 object-cover" />
+
+            <div className="absolute inset-0 flex justify-end items-end p-3
+                            bg-gradient-to-t from-black/70 via-transparent to-transparent
+                            opacity-0 group-hover:opacity-100 transition">
+
+              <div className="flex gap-1 items-center text-white">
                 <p>{creation.likes.length}</p>
-                <Heart onClick={()=>imageLikeToggle(creation.id)} className={`min-w-5 h-5 hover:scale-110 cursor-pointer ${creation.likes.includes(user.id)? 'fill-red-500 text-red-600' : 'text-white'}`}/>
+                <Heart 
+                  onClick={() => imageLikeToggle(creation.id)}
+                  className={`w-6 h-6 cursor-pointer transition 
+                  ${creation.likes.includes(user?.id) 
+                     ? "fill-red-500 text-red-500" 
+                     : "hover:scale-110"}`}
+                />
               </div>
-            </div>
 
+            </div>
           </div>
         ))}
 
       </div>
-      
     </div>
   ) : (
-    <div className='flex justify-center items-center h-full'>
-      <span className='w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin '></span>
-
+    <div className="flex justify-center items-center h-full">
+      <span className="w-6 h-6 border-2 border-t-transparent animate-spin rounded-full"></span>
     </div>
   )
 }
 
-export default Community
+export default Community;
