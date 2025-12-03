@@ -27,15 +27,16 @@ function BlogTitles() {
       const prompt = `Generate a blog titles on the keyword "${input}" in the category of "${selectedCategory}".`;
 
       const token = await getToken();
-      const { data } = await axios.post('/api/ai/generate-blog-titles',
+      const { data } = await axios.post('/api/ai/generate-blog-title',
         { prompt },
         {
           headers: { Authorization:`Bearer ${token}` }
         }
       );
-
+      console.log("api response:",data);
+      
       if(data.success){
-        setContent(data.titles)
+        setContent(data.content)
       }else{
         toast.error(data.message)
       }
