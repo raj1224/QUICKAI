@@ -230,11 +230,7 @@ export const removeImageBackground= async(req ,res)=>{
                     message: 'This feature is available for premium plan users only.'
                 }
             )   
-        }
-//         
-
-
-
+        }        
 const {secure_url}= await cloudinary.uploader.upload(image.path,{
     transformation:[
         {
@@ -245,6 +241,9 @@ const {secure_url}= await cloudinary.uploader.upload(image.path,{
 });
 
 await sql`INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, 'Remove background from image', ${secure_url}, 'image',)`;
+
+console.log("REQ FILE →", req.file);
+
 
 res.json({success: true, content:secure_url});
     }
