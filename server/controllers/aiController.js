@@ -265,48 +265,112 @@ res.json({success: true, content:secure_url});
 } 
 
 
-export const removeImageObject= async(req ,res)=>{
-    try {
-        const {userId}= req.auth();
-        const image=req.file;
-        const {object}=req.body;
-        const plan= req.plan;
+// export const removeImageObject= async(req ,res)=>{
+//     try {
+//         const {userId}= req.auth();
+//         const image=req.file;
+//         const {object}=req.body;
+//         const plan= req.plan;
 
-        if(plan!=='premium'  ){
-            return res.json(
-                {
-                    success: false,
-                    message: 'This feature is available for premium plan users only.'
-                }
-            )   
-        }
+//         if(plan!=='premium'  ){
+//             return res.json(
+//                 {
+//                     success: false,
+//                     message: 'This feature is available for premium plan users only.'
+//                 }
+//             )   
+//         }
 
-const {public_id}= await cloudinary.uploader.upload(image.path);
+// const {public_id}= await cloudinary.uploader.upload(image.path);
 
-const imageUrl= cloudinary.url(public_id,{
-    transformation:[
-        {effect: `gen_remove:${object}`,}],
-        resource_type: 'image',
-});
+// const imageUrl= cloudinary.url(public_id,{
+//     transformation:[
+//         {effect: `gen_remove:${object}`,}],
+//         resource_type: 'image',
+// });
 
 
 
-await sql`INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, ${`Removed ${object} from image`}, ${imageUrl}, 'image',)`;
+// await sql`INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, ${`Removed ${object} from image`}, ${imageUrl}, 'image',)`;
+// console.log("REQ FILE →", req.file);
+// console.log("OBJECT TO REMOVE →", object);
 
-res.json({success: true, content:imageUrl});
-    }
-    catch (error) {
-        console.log(error.message);
+
+// res.json({success: true, content:imageUrl});
+//     }
+//     catch (error) {
+//         console.log(error.message);
         
-        res.json(
-            {
-                success: false,
-                message:error.message
-            }
-        )
-    }  
-} 
+//         res.json(
+//             {
+//                 success: false,
+//                 message:error.message
+//             }
+//         )
+//     }  
+// } 
 
+export const removeImageObject = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const image = req.file;
+    const { object } = req.body;
+    const plan = req.plan;
+
+    if (plan !== "premium") {
+      return res.json({
+        success: false,
+        message: "This feature is available for premium plan users only.",
+      });
+    }
+
+    if (!image) {
+      return res.json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+
+    if (!object) {
+      return res.json({
+        success: false,
+        message: "No object specified to remove",
+      });
+    }
+
+    console.log("REQ FILE →", req.file);
+    console.log("OBJECT TO REMOVE →", object);
+
+    // Upload image to Cloudinary first
+    const uploadResult = await cloudinary.uploader.upload(image.path, {
+      resource_type: "image",
+    });
+
+    // Apply Object Removal transformation
+    const imageUrl = cloudinary.url(uploadResult.public_id, {
+      transformation: [
+        {
+          effect: `gen_remove:${object}`, // 👈 remove object
+        },
+      ],
+      resource_type: "image",
+    });
+
+    // Save to DB
+    await sql`
+      INSERT INTO creations (user_id, prompt, content, type)
+      VALUES (${userId}, ${`Removed ${object} from image`}, ${imageUrl}, 'image')
+    `;
+
+    res.json({ success: true, content: imageUrl });
+  } catch (error) {
+    console.log("OBJECT REMOVE ERROR →", error);
+    res.json({
+      success: false,
+      message: error.message || "Failed to remove object",
+    });
+  }
+};
 
 export const resumeReview= async(req ,res)=>{
     try {
